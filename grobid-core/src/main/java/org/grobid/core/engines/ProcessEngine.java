@@ -152,6 +152,91 @@ public class ProcessEngine implements Closeable {
     }
 
     /**
+     *
+     * @param pGbdArgs
+     * @throws Exception
+     */
+    public void processToJats(final GrobidMainArgs pGbdArgs) throws Exception {
+        inferPdfInputPath(pGbdArgs);
+        inferOutputPath(pGbdArgs);
+        final File pdfDirectory = new File(pGbdArgs.getPath2Input());
+        File[] files = pdfDirectory.listFiles();
+        if (files == null) {
+            LOGGER.warn("No files in directory: " + pdfDirectory);
+        } else {
+            List<String> elementCoordinates = null;
+            if (pGbdArgs.getTeiCoordinates()) {
+                elementCoordinates = Arrays.asList("figure", "persName", "ref", "biblStruct", "formula");
+            }
+            processDirectoryJats(files, pGbdArgs, pGbdArgs.getPath2Output(), pGbdArgs.getSaveAssets(), elementCoordinates);
+            System.out.println(Engine.getCntManager());
+        }
+    }
+
+    /**
+     * Process files in specified dir and produce result JATS files; by analogy to processFullTextDirectory
+     *
+     *
+     * @param files Files to be processed
+     * @param pGbdArgs
+     * @param outputPath
+     * @param saveAssets
+     * @param elementCoordinates
+     */
+    private void processDirectoryJats(File[] files,
+                                      final GrobidMainArgs pGbdArgs,
+                                      String outputPath,
+                                      boolean saveAssets,
+                                      List<String> elementCoordinates) {
+        if (files != null) {
+            boolean recurse = pGbdArgs.isRecursive();
+            String result;
+            for (final File currPdf : files) {
+                try {
+                    if (currPdf.getName().toLowerCase().endsWith(".pdf")) {
+                        System.out.println("Processing: " + currPdf.getPath());
+                        GrobidAnalysisConfig config = null;
+                        // path for saving assets
+                        if (saveAssets) {
+                            String baseName = currPdf.getName().replace(".pdf", "").replace(".PDF", "");
+                            String assetPath = outputPath + File.separator + baseName + "_assets";
+                            config = GrobidAnalysisConfig.builder()
+                                    .pdfAssetPath(new File(assetPath))
+                                    .generateTeiCoordinates(elementCoordinates)
+                                    .build();
+                        } else
+                            config = GrobidAnalysisConfig.builder().generateTeiCoordinates(elementCoordinates).build();
+                        result = getEngine().fullTextToJATS(currPdf, config);
+                        File outputPathFile = new File(outputPath);
+                        if (!outputPathFile.exists()) {
+                            outputPathFile.mkdir();
+                        }
+                        if (currPdf.getName().endsWith(".pdf")) {
+                            IOUtilities.writeInFile(outputPath + File.separator
+                                    + new File(currPdf.getAbsolutePath())
+                                    .getName().replace(".pdf", ".jats.xml"), result.toString());
+                        } else if (currPdf.getName().endsWith(".PDF")) {
+                            IOUtilities.writeInFile(outputPath + File.separator
+                                    + new File(currPdf.getAbsolutePath())
+                                    .getName().replace(".PDF", ".jats.xml"), result.toString());
+                        }
+                    } else if (recurse && currPdf.isDirectory()) {
+                        File[] newFiles = currPdf.listFiles();
+                        if (newFiles != null) {
+                            String newLevel = currPdf.getName();
+                            processDirectoryJats(newFiles, pGbdArgs, outputPath +
+                                    File.separator + newLevel, saveAssets, elementCoordinates);
+                        }
+                    }
+                } catch (final Exception exp) {
+                    LOGGER.error("An error occured while processing the file " + currPdf.getAbsolutePath()
+                            + ". Continuing the process for the other files", exp);
+                }
+            }
+        }
+    }
+
+    /**
      * Process the full text recursively or not using pGbdArgs parameters.
      *
      * @param files    list of files to be processed

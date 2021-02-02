@@ -34,7 +34,8 @@ public class TEISegmentationSaxParser extends DefaultHandler {
 		page number (<page>): page,
 		? each bibliographical references in the biblio section (<ref>): bibl 
 		annexes (<annex>): div type="annex" (optionally under back)
-		acknowledgement (<acknowledgement>): div type="acknowledgement" (optionally under back)
+		acknowledgement (<acknowledgement>): div type="acknowledgement" (optionally under back),
+		line number (<linenumber>): note type line_number
  	*/
 
     private static final Logger logger = LoggerFactory.getLogger(TEISegmentationSaxParser.class);
@@ -135,7 +136,7 @@ public class TEISegmentationSaxParser extends DefaultHandler {
                 //currentTags.push("<other>");
 				currentTag = "<other>";
             } else if (qName.equals("toc")) {
-                // normally valid table of content mark-up should be <div type="toc>", not tag <toc> 
+                // normally valid table of content mark-up should be <div type="toc>", not tag <toc>
                 //currentTags.push("<other>");
                 currentTag = "<toc>";
                 upperTag = currentTag;
@@ -150,17 +151,23 @@ public class TEISegmentationSaxParser extends DefaultHandler {
                     String value = atts.getValue(i);
 
                     if (name != null) {
-                        if (name.equals("place")) {
-                            if (value.equals("footnote") || value.equals("foot") ) {
-								currentTag = "<footnote>";
-                            } else if (value.equals("headnote") || value.equals("head") ) {
-								currentTag = "<headnote>";
-                            } else if (value.equals("margin")) {
-                                currentTag = "<marginnote>";
-                            } else {
-                                logger.error("Invalid attribute value for element note: " + name + "=" + value);
-                            }
-                        } else {
+	                    if (name.equals("place")) {
+		                    if (value.equals("footnote") || value.equals("foot") ) {
+			                    currentTag = "<footnote>";
+		                    } else if (value.equals("headnote") || value.equals("head") ) {
+			                    currentTag = "<headnote>";
+		                    } else if (value.equals("margin")) {
+			                    currentTag = "<marginnote>";
+		                    } else {
+			                    logger.error("Invalid attribute value for element note: " + name + "=" + value);
+		                    }
+                    	} else if (name.equals("type")) {
+		                    if (value.equals("line_number")) {
+			                    currentTag = "<linenumber>";
+		                    } else {
+			                    logger.error("Invalid attribute value for element note: " + name + "=" + value);
+		                    }
+	                    } else {
                             logger.error("Invalid attribute name for element note: " + name);
                         }
                     }

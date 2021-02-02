@@ -471,6 +471,23 @@ public class Engine implements Closeable {
         return resultDoc;
     }
 
+    public String fullTextToJATS(File inputFile,
+                                 GrobidAnalysisConfig config) throws Exception {
+        return fullTextToJATSDoc(inputFile, config).getTei();
+    }
+
+    public Document fullTextToJATSDoc(File inputFile,
+                                     GrobidAnalysisConfig config) throws Exception {
+        FullTextParser fullTextParser = parsers.getFullTextParser();
+        Document resultDoc;
+        LOGGER.debug("Starting processing fullTextToJATS on " + inputFile);
+        long time = System.currentTimeMillis();
+        resultDoc = fullTextParser.processing(inputFile, config, true);
+        LOGGER.debug("Ending processing fullTextToJATS on " + inputFile + ". Time to process: "
+                + (System.currentTimeMillis() - time) + "ms");
+        return resultDoc;
+    }
+
     /**
      * Process all the PDF in a given directory with a segmentation process and
      * produce the corresponding training data format files for manual

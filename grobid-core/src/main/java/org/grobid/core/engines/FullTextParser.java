@@ -21,6 +21,7 @@ import org.grobid.core.document.DocumentPiece;
 import org.grobid.core.document.DocumentPointer;
 import org.grobid.core.document.DocumentSource;
 import org.grobid.core.document.TEIFormatter;
+import org.grobid.core.document.JATSFormatter;
 import org.grobid.core.engines.citations.LabeledReferenceResult;
 import org.grobid.core.engines.citations.ReferenceSegmenter;
 import org.grobid.core.engines.config.GrobidAnalysisConfig;
@@ -106,6 +107,14 @@ public class FullTextParser extends AbstractParser {
     }
 
 	public Document processing(File inputPdf,
+	                           GrobidAnalysisConfig config, boolean toJats) throws Exception {
+		DocumentSource documentSource =
+				DocumentSource.fromPdf(inputPdf, config.getStartPage(), config.getEndPage(),
+						config.getPdfAssetPath() != null, true, false);
+		return processing(documentSource, config, toJats);
+	}
+
+	public Document processing(File inputPdf,
 							   GrobidAnalysisConfig config) throws Exception {
 		DocumentSource documentSource = 
 			DocumentSource.fromPdf(inputPdf, config.getStartPage(), config.getEndPage(), 
@@ -121,7 +130,14 @@ public class FullTextParser extends AbstractParser {
      * @return the document object with built TEI
      */
     public Document processing(DocumentSource documentSource,
-                               GrobidAnalysisConfig config) {
+                               GrobidAnalysisConfig config, boolean... adtValues) {
+	    boolean toJats = false;
+	    if (adtValues.length > 0) {
+	    	if (adtValues[0]) {
+	    		toJats = true;
+		    }
+	    }
+
         if (tmpPath == null) {
             throw new GrobidResourceException("Cannot process pdf file, because temp path is null.");
         }
@@ -145,9 +161,9 @@ public class FullTextParser extends AbstractParser {
             // as fall back to set author and title if they have not been found. 
             // However tests on PMC set 1942 did not improve recognition. This will have to be re-evaluated with
             // another, more diverse, testing set and with further updates of the header model. 
-            
+
             // ---> DO NOT DELETE !
-            
+
             /*if (isBlank(resHeader.getTitle()) || isBlank(resHeader.getAuthors()) || CollectionUtils.isEmpty(resHeader.getFullAuthors())) {
                 // try to exploit PDF embedded metadata (the so-called XMP) if we are still without title/authors
                 // this is risky as those metadata are highly unreliable, but as last chance, why not :)
@@ -294,12 +310,21 @@ public class FullTextParser extends AbstractParser {
 			}
 
             // final combination
-            toTEI(doc, // document
-				resultBody, resultAnnex, // labeled data for body and annex
-				layoutTokenization, tokenizationsBody2, // tokenization for body and annex
-				resHeader, // header 
-				figures, tables, equations, 
-				config);
+	        if (toJats) {
+		        toJATS(doc, // document
+				        resultBody, resultAnnex, // labeled data for body and annex
+				        layoutTokenization, tokenizationsBody2, // tokenization for body and annex
+				        resHeader, // header
+				        figures, tables, equations,
+				        config);
+	        } else {
+		        toTEI(doc, // document
+				        resultBody, resultAnnex, // labeled data for body and annex
+				        layoutTokenization, tokenizationsBody2, // tokenization for body and annex
+				        resHeader, // header
+				        figures, tables, equations,
+				        config);
+	        }
             return doc;
         } catch (GrobidException e) {
 			throw e;
@@ -1569,7 +1594,7 @@ public class FullTextParser extends AbstractParser {
                         output = writeFieldBeginEnd(buffer, s1, "", s2, "<paragraph>",
 							"<p>", addSpace, 3, false);
                     } else {
-                        output = writeFieldBeginEnd(buffer, s1, lastTag, s2, "<paragraph>",
+                        output = writeFieldBeginEnd(buffer, s1, lastTag0, s2, "<paragraph>",
 							"<p>", addSpace, 3, false);
                     }
                 }
@@ -1593,12 +1618,12 @@ public class FullTextParser extends AbstractParser {
                 }
                 if (!output) {
                     output = writeField(buffer, s1, lastTag0, s2, "<section>",
-						"<head>", addSpace, 3, false);
+						"<head level=\"1\">", addSpace, 3, false);
                 }
-                /*if (!output) {
+                if (!output) {
                     output = writeField(buffer, s1, lastTag0, s2, "<subsection>", 
-						"<head>", addSpace, 3, false);
-                }*/
+						"<head level=\"2\">", addSpace, 3, false);
+                }
                 if (!output) {
                     output = writeField(buffer, s1, lastTag0, s2, "<equation>",
 						"<formula>", addSpace, 4, false);
@@ -1611,6 +1636,10 @@ public class FullTextParser extends AbstractParser {
                     output = writeField(buffer, s1, lastTag0, s2, "<figure_marker>",
 						"<ref type=\"figure\">", addSpace, 3, false);
                 }
+	            if (!output) {
+		            output = writeField(buffer, s1, lastTag0, s2, "<note_marker>",
+				            "<ref type=\"note\">", addSpace, 3, false);
+	            }
 				if (!output) {
                     output = writeField(buffer, s1, lastTag0, s2, "<figure>",
 						"<figure>", addSpace, 3, false);
@@ -1621,9 +1650,27 @@ public class FullTextParser extends AbstractParser {
                 }
                 // for item we must distinguish starting and closing tags
                 if (!output) {
-                    output = writeFieldBeginEnd(buffer, s1, lastTag, s2, "<item>",
-						"<item>", addSpace, 3, false);
+	                if (closeParagraph) {
+		                output = writeFieldBeginEnd(buffer, s1, "", s2, "<item_bulleted>",
+				                "<item>", addSpace, 3, false);
+	                } else {
+		                output = writeFieldBeginEnd(buffer, s1, lastTag0, s2, "<item_bulleted>",
+				                "<item>", addSpace, 3, false);
+	                }
                 }
+	            if (!output) {
+		            if (closeParagraph) {
+			            output = writeFieldBeginEnd(buffer, s1, "", s2, "<item_numbered>",
+					            "<item>", addSpace, 3, false);
+		            } else {
+			            output = writeFieldBeginEnd(buffer, s1, lastTag0, s2, "<item_numbered>",
+					            "<item>", addSpace, 3, false);
+		            }
+	            }
+	            if (!output) {
+		            output = writeField(buffer, s1, lastTag0, s2, "<quote>",
+				            "<quote>", addSpace, 3, false);
+	            }
 
                 lastTag = s1;
 
@@ -1710,6 +1757,11 @@ public class FullTextParser extends AbstractParser {
                     buffer.append(" ").append(outField).append(s2);
                 else
                     buffer.append(outField).append(s2);
+            } else if (field.equals("<note_marker>")) {
+	            if (addSpace)
+		            buffer.append(" ").append(outField).append(s2);
+	            else
+		            buffer.append(outField).append(s2);
             } /*else if (field.equals("<label>")) {
                 if (addSpace)
                     buffer.append(" ").append(outField).append(s2);
@@ -1734,6 +1786,7 @@ public class FullTextParser extends AbstractParser {
             } else if (!lastTag0.equals("<citation_marker>") 
             	&& !lastTag0.equals("<figure_marker>")
             	&& !lastTag0.equals("<equation_marker>")
+	            && !lastTag0.equals("<note_marker>")
                     //&& !lastTag0.equals("<figure>")
                     ) {
                 for (int i = 0; i < nbIndent; i++) {
@@ -1798,7 +1851,7 @@ public class FullTextParser extends AbstractParser {
                 else
                     buffer.append(s2);
             } else if (!lastTag0.endsWith("<citation_marker>") && !lastTag0.endsWith("<figure_marker>")
-                    && !lastTag0.endsWith("<table_marker>") && !lastTag0.endsWith("<equation_marker>")) {
+                    && !lastTag0.endsWith("<table_marker>") && !lastTag0.endsWith("<equation_marker>") && !lastTag0.endsWith("<note_marker>")) {
                 for (int i = 0; i < nbIndent; i++) {
                     buffer.append("\t");
                 }
@@ -1828,10 +1881,9 @@ public class FullTextParser extends AbstractParser {
                                    String currentTag) {
         boolean res = false;
         // reference_marker and citation_marker are two exceptions because they can be embedded
-
-        if (!currentTag0.equals(lastTag0) || currentTag.equals("I-<paragraph>") || currentTag.equals("I-<item>")) {
+        if (!currentTag0.equals(lastTag0) || currentTag.equals("I-<paragraph>") || currentTag.equals("I-<item_bulleted>") || currentTag.equals("I-<item_numbered>")) {
             if (currentTag0.equals("<citation_marker>") || currentTag0.equals("<equation_marker>") ||
-				currentTag0.equals("<figure_marker>") || currentTag0.equals("<table_marker>")) {
+				currentTag0.equals("<figure_marker>") || currentTag0.equals("<table_marker>") || currentTag0.equals("<note_marker>")) {
                 return res;
             }
 
@@ -1844,7 +1896,8 @@ public class FullTextParser extends AbstractParser {
 						!currentTag0.equals("<citation_marker>") &&
 						!currentTag0.equals("<table_marker>") &&
 						!currentTag0.equals("<equation_marker>") &&
-						!currentTag0.equals("<figure_marker>")
+						!currentTag0.equals("<figure_marker>") &&
+		                !currentTag0.equals("<note_marker>")
 				) {
                 buffer.append("</p>\n\n");
                 res = true;
@@ -1858,10 +1911,10 @@ public class FullTextParser extends AbstractParser {
             } else if (lastTag0.equals("<equation_label>")) {
                 buffer.append("</label>\n\n");
             } else if (lastTag0.equals("<table>")) {
-                buffer.append("</table>\n\n");
+                buffer.append("</figure>\n\n");
             } else if (lastTag0.equals("<figure>")) {
                 buffer.append("</figure>\n\n");
-            } else if (lastTag0.equals("<item>")) {
+            } else if (lastTag0.equals("<item_bulleted>") || lastTag0.equals("<item_numbered>")) {
                 buffer.append("</item>\n\n");
             } /*else if (lastTag0.equals("<label>")) {
                 buffer.append("</label>\n\n");
@@ -1869,6 +1922,9 @@ public class FullTextParser extends AbstractParser {
 			else if (lastTag0.equals("<content>")) {
                 buffer.append("</content>\n\n");
             } */
+            else if (lastTag0.equals("<quote>")) {
+	            buffer.append("</quote>\n\n");
+            }
 			else if (lastTag0.equals("<citation_marker>")) {
                 buffer.append("</ref>");
 
@@ -1878,6 +1934,8 @@ public class FullTextParser extends AbstractParser {
                 buffer.append("</ref>");
             } else if (lastTag0.equals("<equation_marker>")) {
                 buffer.append("</ref>");
+			} else if (lastTag0.equals("<note_marker>")) {
+	            buffer.append("</ref>");
             } else {
                 res = false;
 
@@ -2344,7 +2402,65 @@ public class FullTextParser extends AbstractParser {
 //		);
 	}
 
-	private static List<TaggingLabel> inlineFullTextLabels = Arrays.asList(TaggingLabels.CITATION_MARKER, TaggingLabels.TABLE_MARKER, 
+	private void toJATS(Document doc,
+	                   String reseBody,
+	                   String reseAnnex,
+	                   LayoutTokenization layoutTokenization,
+	                   List<LayoutToken> tokenizationsAnnex,
+	                   BiblioItem resHeader,
+	                   List<Figure> figures,
+	                   List<Table> tables,
+	                   List<Equation> equations,
+	                   GrobidAnalysisConfig config) {
+		if (doc.getBlocks() == null) {
+			return;
+		}
+		List<BibDataSet> resCitations = doc.getBibDataSets();
+		JATSFormatter jatsFormatter = new JATSFormatter(doc, this);
+		StringBuilder jats;
+		try {
+			jats = jatsFormatter.toJATSHeader(resHeader, resCitations, config);
+
+			//System.out.println(rese);
+			//int mode = config.getFulltextProcessingMode();
+			String tabs;
+			jats = jatsFormatter.toJATSBody(jats, reseBody, resHeader, resCitations,
+					layoutTokenization, figures, tables, equations, doc, config);
+
+			jats.append("\t\t<back>\n");
+
+
+			SortedSet<DocumentPiece> documentAcknowledgementParts =
+					doc.getDocumentPart(SegmentationLabels.ACKNOWLEDGEMENT);
+			Pair<String, LayoutTokenization> featSeg =
+					getBodyTextFeatured(doc, documentAcknowledgementParts);
+			List<LayoutToken> tokenizationsAcknowledgement;
+			if (featSeg != null) {
+				String acknowledgementText = featSeg.getLeft();
+				tokenizationsAcknowledgement = featSeg.getRight().getTokenization();
+				String reseAcknowledgement = null;
+				if ( (acknowledgementText != null) && (acknowledgementText.length() >0) )
+					reseAcknowledgement = label(acknowledgementText);
+				jats = jatsFormatter.toJATSAcknowledgement(jats, reseAcknowledgement,
+						tokenizationsAcknowledgement, resCitations, config);
+			}
+
+			jats = jatsFormatter.toJATSAnnex(jats, reseAnnex, resHeader, resCitations,
+					tokenizationsAnnex, doc, config);
+
+			jats = jatsFormatter.toJATSReferences(jats, resCitations, config);
+			doc.calculateTeiIdToBibDataSets();
+
+			jats.append("\t\t</back>\n");
+			jats.append("</article>");
+		} catch (Exception e) {
+			throw new GrobidException("An exception occurred while running Grobid.", e);
+		}
+
+		doc.setTei(jats.toString());
+	}
+
+	private static List<TaggingLabel> inlineFullTextLabels = Arrays.asList(TaggingLabels.CITATION_MARKER, TaggingLabels.TABLE_MARKER,
                                 TaggingLabels.FIGURE_MARKER, TaggingLabels.EQUATION_LABEL);
 
     public static List<LayoutTokenization> getDocumentFullTextTokens(List<TaggingLabel> labels, String labeledResult, List<LayoutToken> tokenizations) {
