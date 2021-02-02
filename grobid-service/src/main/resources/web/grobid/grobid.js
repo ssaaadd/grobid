@@ -9,6 +9,7 @@
 var grobid = (function($) {
 
 	var teiToDownload;
+	var jatsToDownload;
 	var teiPatentToDownload;
 
 	var block = 0;
@@ -35,6 +36,8 @@ var grobid = (function($) {
 			$('#gbdForm2').attr('action', baseUrl);
 		else if (block == 2)
 			$('#gbdForm3').attr('action', baseUrl);
+		else if (block == 3)
+            $('#gbdForm4').attr('action', baseUrl);
 	}
 
 	$(document).ready(function() {
@@ -51,14 +54,19 @@ var grobid = (function($) {
         // for patent processing
         $("#divRestIII").hide();
 
+        // for processing to JATS XML
+        $("#divRestIV").hide();
+
 		$("#divDoc").hide();
 		$('#consolidateBlock').show();
         $("#btn_download").hide();
         $("#btn_download3").hide();
+        $("#btn_download4").hide();
 
 		createInputFile();
 		createInputFile2();
 		createInputFile3();
+		createInputFile4();
 		setBaseUrl('processHeaderDocument');
 		block = 0;
 
@@ -77,6 +85,11 @@ var grobid = (function($) {
 			return true;
 		});
 
+		$('#selectedService4').change(function() {
+            processChange();
+            return true;
+        });
+
 		$('#gbdForm').ajaxForm({
             beforeSubmit: ShowRequest1,
             success: SubmitSuccesful,
@@ -87,13 +100,23 @@ var grobid = (function($) {
 		$('#submitRequest2').bind('click', submitQuery2);
 		$('#submitRequest3').bind('click', submitQuery3);
 
+		$('#gbdForm4').ajaxForm({
+            beforeSubmit: ShowRequest4,
+            success: SubmitSuccesful4,
+            error: AjaxError4,
+            dataType: "text"
+        });
+
 		// bind download buttons with download methods
 		$('#btn_download').bind('click', download);
 		$("#btn_download").hide();
 		$('#btn_download3').bind('click', downloadPatent);
 		$("#btn_download3").hide();
+		$('#btn_download4').bind('click', downloadJats);
+        $("#btn_download4").hide();
         $('#btn_block_1').bind('click', downloadVisibilty);
         $('#btn_block_3').bind('click', downloadVisibilty3);
+        $('#btn_block_4').bind('click', downloadVisibilty4);
 		//$('#adminForm').attr("action", defineBaseURL("allProperties"));
 		//$('#TabAdminProps').hide();
 		/*$('#adminForm').ajaxForm({
@@ -110,6 +133,7 @@ var grobid = (function($) {
 			//$("#admin").attr('class', 'section-not-active');
 			$("#doc").attr('class', 'section-not-active');
 			$("#patent").attr('class', 'section-not-active');
+			$("#jats").attr('class', 'section-not-active');
 
 			$("#subTitle").html("About");
 			$("#subTitle").show();
@@ -118,6 +142,7 @@ var grobid = (function($) {
 			$("#divRestI").hide();
 			$("#divRestII").hide();
 			$("#divRestIII").hide();
+			$("#divRestIV").hide();
 			//$("#divAdmin").hide();
 			$("#divDoc").hide();
 			$("#divDemo").hide();
@@ -130,6 +155,7 @@ var grobid = (function($) {
 			$("#about").attr('class', 'section-not-active');
 			//$("#admin").attr('class', 'section-not-active');
 			$("#patent").attr('class', 'section-not-active');
+			$("#jats").attr('class', 'section-not-active');
 
 			$("#subTitle").hide();
 			block = 0;
@@ -140,6 +166,7 @@ var grobid = (function($) {
 			$("#divRestI").show();
 			$("#divRestII").hide();
 			$("#divRestIII").hide();
+			$("#divRestIV").hide();
 			$("#divAbout").hide();
 			$("#divDoc").hide();
 			//$("#divAdmin").hide();
@@ -174,6 +201,7 @@ var grobid = (function($) {
 			$("#patent").attr('class', 'section-not-active');
 			$("#about").attr('class', 'section-not-active');
 			//$("#admin").attr('class', 'section-not-active');
+			$("#jats").attr('class', 'section-not-active');
 
 			$("#subTitle").html("Doc");
 			$("#subTitle").show();
@@ -183,6 +211,7 @@ var grobid = (function($) {
 			$("#divRestI").hide();
 			$("#divRestII").hide();
 			$("#divRestIII").hide();
+			$("#divRestIV").hide();
 			//$("#divAdmin").hide();
 			$("#divDemo").hide();
 			return false;
@@ -194,6 +223,7 @@ var grobid = (function($) {
 			$("#about").attr('class', 'section-not-active');
 			//$("#admin").attr('class', 'section-not-active');
 			$("#doc").attr('class', 'section-not-active');
+			$("#jats").attr('class', 'section-not-active');
 
 			block = 1;
 			setBaseUrl('referenceAnnotations');
@@ -207,6 +237,7 @@ var grobid = (function($) {
 			$("#divRestI").hide();
 			$("#divRestII").show();
 			$("#divRestIII").hide();
+			$("#divRestIV").hide();
 			//$("#divAdmin").hide();
 			return false;
 		});
@@ -217,6 +248,7 @@ var grobid = (function($) {
 			$("#about").attr('class', 'section-not-active');
 			//$("#admin").attr('class', 'section-not-active');
 			$("#doc").attr('class', 'section-not-active');
+			$("#jats").attr('class', 'section-not-active');
 
 			block = 2;
 			setBaseUrl('processCitationPatentST36');
@@ -228,9 +260,33 @@ var grobid = (function($) {
 			$("#divRestI").hide();
 			$("#divRestII").hide();
 			$("#divRestIII").show();
+			$("#divRestIV").hide();
 			//$("#divAdmin").hide();
 			return false;
 		});
+		$("#jats").click(function() {
+            $("#patent").attr('class', 'section-not-active');
+            $("#rest").attr('class', 'section-not-active');
+            $("#pdf").attr('class', 'section-not-active');
+            $("#about").attr('class', 'section-not-active');
+            //$("#admin").attr('class', 'section-not-active');
+            $("#doc").attr('class', 'section-not-active');
+            $("#jats").attr('class', 'section-active');
+
+            block = 3;
+            setBaseUrl('processFulltextDocumentJATS');
+            $("#subTitle").hide();
+            processChange();
+
+            $("#divDoc").hide();
+            $("#divAbout").hide();
+            $("#divRestI").hide();
+            $("#divRestII").hide();
+            $("#divRestIII").hide();
+            $("#divRestIV").show();
+            //$("#divAdmin").hide();
+            return false;
+        });
 	});
 
 	function ShowRequest1(formData, jqForm, options) {
@@ -266,6 +322,11 @@ var grobid = (function($) {
 	    return true;
 	}
 
+	function ShowRequest4(formData, jqForm, options) {
+        $('#requestResult4').html('<font color="grey">Requesting server...</font>');
+        return true;
+    }
+
 	function AjaxError1(jqXHR, textStatus, errorThrown) {
 		$('#requestResult').html("<font color='red'>Error encountered while requesting the server.<br/>"+jqXHR.responseText+"</font>");
 		responseJson = null;
@@ -293,6 +354,11 @@ var grobid = (function($) {
 		responseJson = null;
 	}
 
+	function AjaxError4(jqXHR, textStatus, errorThrown) {
+        $('#requestResult4').html("<font color='red'>Error encountered while requesting the server.<br/>"+jqXHR.responseText+"</font>");
+        responseJson = null;
+    }
+
 	function htmll(s) {
     	return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   	}
@@ -310,6 +376,20 @@ var grobid = (function($) {
 		$('#requestResult').show();
         $("#btn_download").show();
 	}
+
+	function SubmitSuccesful4(responseText, statusText, xhr) {
+        //var selected = $('#selectedService option:selected').attr('value');
+        var display = "<pre class='prettyprint lang-xml' id='xmlCode'>";
+        var testStr = vkbeautify.xml(responseText);
+        jatsToDownload = responseText;
+        display += htmll(responseText);
+
+        display += "</pre>";
+        $('#requestResult4').html(display);
+        window.prettyPrint && prettyPrint();
+        $('#requestResult4').show();
+        $("#btn_download4").show();
+    }
 
     function submitQuery2() {
         var selected = $('#selectedService2 option:selected').attr('value');
@@ -1417,6 +1497,8 @@ var grobid = (function($) {
 			selected = $('#selectedService2 option:selected').attr('value');
 		else if (block == 2)
 			selected = $('#selectedService3 option:selected').attr('value');
+		else if (block == 3)
+            selected = $('#selectedService4 option:selected').attr('value');
 
 		if (selected == 'processHeaderDocument') {
 			createInputFile(selected);
@@ -1535,6 +1617,10 @@ var grobid = (function($) {
 			$('#consolidateBlock3').show();
 			setBaseUrl('citationPatentAnnotations');
 		}
+		else if (selected == 'processFulltextDocumentJATS') {
+            createInputFile4(selected);
+            setBaseUrl('processFulltextDocumentJATS');
+        }
 	}
 
 	function createInputFile(selected) {
@@ -1564,6 +1650,14 @@ var grobid = (function($) {
 		$('#gbdForm3').attr('method', 'post');
 	}
 
+	function createInputFile4(selected) {
+        $('#textInputDiv4').hide();
+        $('#fileInputDiv4').show();
+
+        $('#gbdForm4').attr('enctype', 'multipart/form-data');
+        $('#gbdForm4').attr('method', 'post');
+    }
+
 	function createInputTextArea(nameInput) {
 		//$('#label').html('&nbsp;');
 		$('#fileInputDiv').hide();
@@ -1588,6 +1682,17 @@ var grobid = (function($) {
 		$('#gbdForm3').attr('enctype', '');
 		$('#gbdForm3').attr('method', 'post');
 	}
+
+	function createInputTextArea4(nameInput) {
+        //$('#label').html('&nbsp;');
+        $('#fileInputDiv4').hide();
+
+        $('#textInputArea4').attr('name', nameInput);
+        $('#textInputDiv4').show();
+
+        $('#gbdForm4').attr('enctype', '');
+        $('#gbdForm4').attr('method', 'post');
+    }
 
 	function download(){
         var name ="export";
@@ -1653,6 +1758,30 @@ var grobid = (function($) {
         });
 
     }
+
+    function downloadJats(){
+        var name ="export";
+        if ((document.getElementById("input4").files[0].type == 'application/pdf') ||
+            (document.getElementById("input4").files[0].name.endsWith(".pdf")) ||
+            (document.getElementById("input4").files[0].name.endsWith(".PDF"))) {
+             name = document.getElementById("input4").files[0].name;
+        }
+        var fileName = name + ".jats.xml";
+        var a = document.createElement("a");
+
+        var file = new Blob([jatsToDownload], {type: 'application/xml'});
+        var fileURL = URL.createObjectURL(file);
+        a.href = fileURL;
+        a.download = fileName;
+
+        document.body.appendChild(a);
+
+        $(a).ready(function() {
+            a.click();
+            return true;
+        });
+    }
+
     })(jQuery);
 
 
@@ -1661,4 +1790,7 @@ function downloadVisibilty(){
 }
 function downloadVisibilty3(){
     $("#btn_download3").hide();
+}
+function downloadVisibilty4(){
+    $("#btn_download4").hide();
 }

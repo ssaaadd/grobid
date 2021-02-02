@@ -41,6 +41,11 @@ public interface GrobidPaths {
 	String PATH_FULL_TEXT = "processFulltextDocument";
 
 	/**
+	 * path extension for processing full text of documents to JATS XML.
+	 */
+	String PATH_FULL_TEXT_JATS = "processFulltextDocumentJATS";
+
+	/**
 	 * path extension for processing full text of documents together with image extraction.
 	 */
 	String PATH_FULL_TEXT_ASSET = "processFulltextAssetDocument";

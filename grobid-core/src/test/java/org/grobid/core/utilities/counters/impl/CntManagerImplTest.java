@@ -34,7 +34,8 @@ public class CntManagerImplTest {
 
     @Test
     public void testGetAllCounters() throws Exception {
-        target.i(TaggingLabels.ITEM);
+        target.i(TaggingLabels.ITEM_BULLETED);
+        target.i(TaggingLabels.ITEM_NUMBERED);
         target.i(TaggingLabels.OTHER);
 
         final Map<String, Map<String, Long>> allCounters = target.getAllCounters();
@@ -43,12 +44,14 @@ public class CntManagerImplTest {
         assertThat(stringLongMap.size(), is(2));
 
         assertThat(stringLongMap.get(TaggingLabels.OTHER.getName()), is(1l));
-        assertThat(stringLongMap.get(TaggingLabels.ITEM.getName()), is(1l));
+        assertThat(stringLongMap.get(TaggingLabels.ITEM_BULLETED.getName()), is(1l));
+        assertThat(stringLongMap.get(TaggingLabels.ITEM_NUMBERED.getName()), is(1l));
     }
 
     @Test
     public void testGetAllCounters2() throws Exception {
-        target.i(TaggingLabels.ITEM);
+        target.i(TaggingLabels.ITEM_BULLETED);
+        target.i(TaggingLabels.ITEM_NUMBERED);
         target.i(FigureCounters.SKIPPED_DUE_TO_MISMATCH_OF_CAPTIONS_AND_VECTOR_AND_BITMAP_GRAPHICS);
 
         final Map<String, Map<String, Long>> allCounters = target.getAllCounters();
@@ -88,9 +91,13 @@ public class CntManagerImplTest {
 
     @Test
     public void testCnt_withClass() throws Exception {
-        assertThat(target.cnt(TaggingLabels.ITEM), is(0l));
-        target.i(TaggingLabels.ITEM);
-        assertThat(target.cnt(TaggingLabels.ITEM), is(1l));
+        assertThat(target.cnt(TaggingLabels.ITEM_NUMBERED), is(0l));
+        target.i(TaggingLabels.ITEM_NUMBERED);
+        assertThat(target.cnt(TaggingLabels.ITEM_NUMBERED), is(1l));
+
+        assertThat(target.cnt(TaggingLabels.ITEM_BULLETED), is(0l));
+        target.i(TaggingLabels.ITEM_BULLETED);
+        assertThat(target.cnt(TaggingLabels.ITEM_BULLETED), is(1l));
 
         assertThat(target.cnt(FigureCounters.SKIPPED_DUE_TO_MISMATCH_OF_CAPTIONS_AND_VECTOR_AND_BITMAP_GRAPHICS), is(0l));
         target.i(FigureCounters.SKIPPED_DUE_TO_MISMATCH_OF_CAPTIONS_AND_VECTOR_AND_BITMAP_GRAPHICS);

@@ -2,6 +2,10 @@ package org.grobid.core.engines.label;
 
 import org.grobid.core.GrobidModels;
 
+/**
+ * @author Slava
+ * Date: 4/3/14
+ */
 public class SegmentationLabels extends TaggingLabels{
     /**
      * cover page <cover>,
@@ -14,8 +18,7 @@ public class SegmentationLabels extends TaggingLabels{
      * page number <page>,
      * annexes <annex>,
 	 * acknowledgement <acknowledgement>,
-	 * availability <availability>,
-	 * funding <funding>,
+     * line number <linenumber>,
      * other <other>,
 	 * toc <toc> -> not yet used because not yet training data for this
      */
@@ -30,6 +33,7 @@ public class SegmentationLabels extends TaggingLabels{
     public final static String ANNEX_LABEL = "<annex>";
     public final static String REFERENCES_LABEL = "<references>";
     public final static String ACKNOWLEDGEMENT_LABEL = "<acknowledgement>";
+    public final static String LINE_NUMBER_LABEL = "<linenumber>";
     public final static String TOC_LABEL = "<toc>";
 
     SegmentationLabels() {
@@ -46,10 +50,8 @@ public class SegmentationLabels extends TaggingLabels{
     public static final TaggingLabel ANNEX = new TaggingLabelImpl(GrobidModels.SEGMENTATION, ANNEX_LABEL);
     public static final TaggingLabel REFERENCES = new TaggingLabelImpl(GrobidModels.SEGMENTATION, REFERENCES_LABEL);
     public static final TaggingLabel ACKNOWLEDGEMENT = new TaggingLabelImpl(GrobidModels.SEGMENTATION, ACKNOWLEDGEMENT_LABEL);
-
-    public static final TaggingLabel AVAILABILITY = new TaggingLabelImpl(GrobidModels.SEGMENTATION, AVAILABILITY_LABEL);
-    public static final TaggingLabel FUNDING = new TaggingLabelImpl(GrobidModels.SEGMENTATION, FUNDING_LABEL);
     public static final TaggingLabel TOC = new TaggingLabelImpl(GrobidModels.SEGMENTATION, TOC_LABEL);
+    public static final TaggingLabel LINENUMBER = new TaggingLabelImpl(GrobidModels.SEGMENTATION, LINE_NUMBER_LABEL);
 
     static {
         register(COVER);
@@ -62,9 +64,8 @@ public class SegmentationLabels extends TaggingLabels{
         register(ANNEX);
         register(REFERENCES);
         register(ACKNOWLEDGEMENT);
-        register(AVAILABILITY);
-        register(FUNDING);
         register(TOC);
+        register(LINENUMBER);
     }
 
 }
