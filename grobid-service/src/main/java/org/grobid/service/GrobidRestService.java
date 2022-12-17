@@ -246,6 +246,36 @@ public class GrobidRestService implements GrobidPaths {
         );
     }
 
+    @Path(PATH_FULL_TEXT_JATS)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_XML)
+    @POST
+    public Response processFulltextDocumentJATS_post(@FormDataParam(INPUT) InputStream inputStream,
+                                                 @FormDataParam("consolidateHeader") String consolidateHeader,
+                                                 @FormDataParam("consolidateCitations") String consolidateCitations,
+                                                 @FormDataParam("includeRawCitations") String includeRawCitations,
+                                                 @DefaultValue("-1") @FormDataParam("start") int startPage,
+                                                 @DefaultValue("-1") @FormDataParam("end") int endPage,
+                                                 @FormDataParam("generateIDs") String generateIDs,
+                                                 @FormDataParam("teiCoordinates") List<FormDataBodyPart> coordinates) throws Exception {
+        return processFulltextToJATS(inputStream, consolidateHeader, consolidateCitations, includeRawCitations, startPage, endPage, generateIDs, coordinates);
+    }
+
+    @Path(PATH_FULL_TEXT_JATS)
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    @Produces(MediaType.APPLICATION_XML)
+    @PUT
+    public Response processFulltextDocumentJATS(@FormDataParam(INPUT) InputStream inputStream,
+                                            @FormDataParam("consolidateHeader") String consolidateHeader,
+                                            @FormDataParam("consolidateCitations") String consolidateCitations,
+                                            @FormDataParam("includeRawCitations") String includeRawCitations,
+                                            @DefaultValue("-1") @FormDataParam("start") int startPage,
+                                            @DefaultValue("-1") @FormDataParam("end") int endPage,
+                                            @FormDataParam("generateIDs") String generateIDs,
+                                            @FormDataParam("teiCoordinates") List<FormDataBodyPart> coordinates) throws Exception {
+        return processFulltextToJATS(inputStream, consolidateHeader, consolidateCitations, includeRawCitations, startPage, endPage, generateIDs, coordinates);
+    }
+
     private Response processFulltext(InputStream inputStream,
                                      String consolidateHeader,
                                      String consolidateCitations,
@@ -271,6 +301,25 @@ public class GrobidRestService implements GrobidPaths {
             includeRaw,
             startPage, endPage, generate, segment, teiCoordinates
         );
+    }
+
+    private Response processFulltextToJATS(InputStream inputStream,
+                                     @FormDataParam("consolidateHeader") String consolidateHeader,
+                                     @FormDataParam("consolidateCitations") String consolidateCitations,
+                                     @FormDataParam("includeRawCitations") String includeRawCitations,
+                                     int startPage,
+                                     int endPage,
+                                     String generateIDs,
+                                     List<FormDataBodyPart> coordinates
+    ) throws Exception {
+        int consolHeader = validateConsolidationParam(consolidateHeader);
+        int consolCitations = validateConsolidationParam(consolidateCitations);
+        boolean includeRaw = validateIncludeRawParam(includeRawCitations);
+        boolean generate = validateGenerateIdParam(generateIDs);
+
+        List<String> teiCoordinates = collectCoordinates(coordinates);
+
+        return restProcessFiles.processFulltextDocumentJATS(inputStream, consolHeader, consolCitations, includeRaw, startPage, endPage, generate, teiCoordinates);
     }
 
     private List<String> collectCoordinates(List<FormDataBodyPart> coordinates) {

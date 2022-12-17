@@ -34,14 +34,18 @@ public class TaggingLabels {
     public static final String TABLE_MARKER_LABEL = "<table_marker>";
     public static final String FIGURE_MARKER_LABEL = "<figure_marker>";
     public static final String EQUATION_MARKER_LABEL = "<equation_marker>";
+    public static final String NOTE_MARKER_LABEL = "<note_marker>";
 
     public final static String PARAGRAPH_LABEL = "<paragraph>";
-    public final static String ITEM_LABEL = "<item>";
+    public final static String ITEM_BULLETED_LABEL = "<item_bulleted>";
+    public final static String ITEM_NUMBERED_LABEL = "<item_numbered>";
     public final static String SECTION_LABEL = "<section>";
+    public final static String SUBSECTION_LABEL = "<subsection>";
     public final static String FIGURE_LABEL = "<figure>";
     public final static String TABLE_LABEL = "<table>";
     public final static String EQUATION_LAB = "<equation>";
     public final static String EQUATION_ID_LABEL = "<equation_label>";
+    public final static String QUOTE_LABEL = "<quote>";
     public final static String DESCRIPTION_LABEL = "<figDesc>";
     public final static String HEADER_LABEL = "<figure_head>";
     public final static String CONTENT_LABEL = "<content>";
@@ -134,14 +138,18 @@ public class TaggingLabels {
     public static final TaggingLabel TABLE_MARKER = new TaggingLabelImpl(GrobidModels.FULLTEXT, TABLE_MARKER_LABEL);
     public static final TaggingLabel FIGURE_MARKER = new TaggingLabelImpl(GrobidModels.FULLTEXT, FIGURE_MARKER_LABEL);
     public static final TaggingLabel EQUATION_MARKER = new TaggingLabelImpl(GrobidModels.FULLTEXT, EQUATION_MARKER_LABEL);
+    public static final TaggingLabel NOTE_MARKER = new TaggingLabelImpl(GrobidModels.FULLTEXT, NOTE_MARKER_LABEL);
     public static final TaggingLabel PARAGRAPH = new TaggingLabelImpl(GrobidModels.FULLTEXT, PARAGRAPH_LABEL);
-    public static final TaggingLabel ITEM = new TaggingLabelImpl(GrobidModels.FULLTEXT, ITEM_LABEL);
+    public static final TaggingLabel ITEM_BULLETED = new TaggingLabelImpl(GrobidModels.FULLTEXT, ITEM_BULLETED_LABEL);
+    public static final TaggingLabel ITEM_NUMBERED = new TaggingLabelImpl(GrobidModels.FULLTEXT, ITEM_NUMBERED_LABEL);
     public static final TaggingLabel OTHER = new TaggingLabelImpl(GrobidModels.FULLTEXT, OTHER_LABEL);
     public static final TaggingLabel SECTION = new TaggingLabelImpl(GrobidModels.FULLTEXT, SECTION_LABEL);
+    public static final TaggingLabel SUBSECTION = new TaggingLabelImpl(GrobidModels.FULLTEXT, SUBSECTION_LABEL);
     public static final TaggingLabel FIGURE = new TaggingLabelImpl(GrobidModels.FULLTEXT, FIGURE_LABEL);
     public static final TaggingLabel TABLE = new TaggingLabelImpl(GrobidModels.FULLTEXT, TABLE_LABEL);
     public static final TaggingLabel EQUATION = new TaggingLabelImpl(GrobidModels.FULLTEXT, EQUATION_LAB);
     public static final TaggingLabel EQUATION_LABEL = new TaggingLabelImpl(GrobidModels.FULLTEXT, EQUATION_ID_LABEL);
+    public static final TaggingLabel QUOTE = new TaggingLabelImpl(GrobidModels.FULLTEXT, QUOTE_LABEL);
 
     public static final TaggingLabel HEADER_DATE = new TaggingLabelImpl(GrobidModels.HEADER, DATE_LABEL);
     public static final TaggingLabel HEADER_TITLE = new TaggingLabelImpl(GrobidModels.HEADER, TITLE_LABEL);
@@ -261,14 +269,18 @@ public class TaggingLabels {
         register(TABLE_MARKER);
         register(FIGURE_MARKER);
         register(EQUATION_MARKER);
+        register(NOTE_MARKER);
         register(PARAGRAPH);
-        register(ITEM);
+        register(ITEM_BULLETED);
+        register(ITEM_NUMBERED);
         register(OTHER);
         register(SECTION);
+        register(SUBSECTION);
         register(FIGURE);
         register(TABLE);
         register(EQUATION);
         register(EQUATION_LABEL);
+        register(QUOTE);
 
         //header
         register(HEADER_DATE);

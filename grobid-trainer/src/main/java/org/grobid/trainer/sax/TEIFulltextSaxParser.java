@@ -29,7 +29,8 @@ public class TEIFulltextSaxParser extends DefaultHandler {
     private String output = null;
     private Stack<String> currentTags = null;
 	private String currentTag = null;
-	
+	private String currentListRend = null; // bulleted, numbered
+
     private boolean figureBlock = false;
 	private boolean tableBlock = false;
 
@@ -68,7 +69,7 @@ public class TEIFulltextSaxParser extends DefaultHandler {
 			}
         }
 
-        if (qName.equals("figure") || qName.equals("table")) {
+        if (qName.equals("figure")) {
             figureBlock = false;
 			tableBlock = false;
         }
@@ -153,6 +154,9 @@ public class TEIFulltextSaxParser extends DefaultHandler {
                             } else if (value.equals("section")) {
                                 currentTags.push("<section_marker>");
                                 currentTag = "<section_marker>";
+                            } else if (value.equals("note")) {
+	                            currentTags.push("<note_marker>");
+	                            currentTag = "<note_marker>";
                             } else {
                                 logger.error("Invalid attribute value for element ref: " + name + "=" + value);
                             }
@@ -169,26 +173,84 @@ public class TEIFulltextSaxParser extends DefaultHandler {
                 currentTags.push("<equation_label>");
                 currentTag = "<equation_label>";
             } else if (qName.equals("head")) {
-				{
-                    currentTags.push("<section>");
+
+				int length = atts.getLength();
+				if (length != 0) {
+					for (int i = 0; i < length; i++) {
+						// Get names and values for each attribute
+						String name = atts.getQName(i);
+						String value = atts.getValue(i);
+
+						if (name != null) {
+							if (name.equals("level")) {
+								if (value.equals("1")) {
+									currentTags.push("<section>");
+									currentTag = "<section>";
+								} else if (value.equals("2")) {
+									currentTags.push("<subsection>");
+									currentTag = "<subsection>";
+								} else {
+									logger.error("Invalid attribute value for element ref: " + name + "=" + value);
+								}
+							} else {
+								logger.error("Invalid attribute name for element ref: " + name);
+							}
+						}
+					}
+				} else {
+					currentTags.push("<section>");
 					currentTag = "<section>";
-                }
+				}
             } 
             else if (qName.equals("table")) {
                 currentTags.push("<table>");
 				currentTag = "<table>";
-                tableBlock = true;
-                figureBlock = false;
-            } 
+            }
+            else if (qName.equals("list")) {
+	            int length = atts.getLength();
+	            if (length != 0) {
+		            for (int i = 0; i < length; i++) {
+			            String name = atts.getQName(i);
+			            String value = atts.getValue(i);
+			            if (name != null) {
+				            if (name.equals("rend")) {
+				            	switch(value) {
+						            case "bulleted":
+						            case "numbered":
+						            	this.currentListRend = value;
+						            	break;
+					                default:
+						                logger.error("Invalid attribute value for element ref: " + name + "=" + value);
+					            }
+				            } else {
+					            logger.error("Invalid attribute name for element ref: " + name);
+				            }
+			            }
+		            }
+	            } else {
+		            this.currentListRend = "bulleted";
+	            }
+            }
 			else if (qName.equals("item")) {
-                currentTags.push("<paragraph>");
-				currentTag = "<paragraph>";
-                //currentTags.push("<item>");
-                //currentTag = "<item>";
+                //currentTags.push("<paragraph>");
+				//currentTag = "<paragraph>";
+	            if (this.currentListRend != null) {
+	            	if (this.currentListRend.equals("bulleted")) {
+			            currentTags.push("<item_bulleted>");
+			            currentTag = "<item_bulleted>";
+		            } else if (this.currentListRend.equals("numbered")) {
+			            currentTags.push("<item_numbered>");
+			            currentTag = "<item_numbered>";
+		            } else {
+			            logger.error("Invalid attribute value for list element: " + this.currentListRend);
+		            }
+	            } else {
+		            currentTags.push("<item_bulleted>");
+		            currentTag = "<item_bulleted>";
+	            }
             } 
 			else if (qName.equals("figure")) {
 	            figureBlock = true;
-                tableBlock = false;
 	            int length = atts.getLength();
 
 	            // Process each attribute
@@ -218,7 +280,11 @@ public class TEIFulltextSaxParser extends DefaultHandler {
 	                currentTags.push("<figure>");
 					currentTag = "<figure>";
 				}
-	        } 
+	        }
+			else if (qName.equals("quote")) {
+	            currentTags.push("<quote>");
+	            currentTag = "<quote>";
+            }
 			else if (qName.equals("other")) {
                 currentTags.push("<other>");
 				currentTag = "<other>";
@@ -242,7 +308,9 @@ public class TEIFulltextSaxParser extends DefaultHandler {
                 (qName.equals("paragraph")) ||
                 (qName.equals("div")) || //(qName.equals("figDesc")) ||
                 (qName.equals("table")) || //(qName.equals("trash")) ||
-                (qName.equals("formula")) || (qName.equals("item")) || (qName.equals("label"))
+                (qName.equals("formula")) ||
+		        (qName.equals("item")) ||
+		        (qName.equals("label"))
                 ) {
 			if (currentTag == null) {
 				return;
